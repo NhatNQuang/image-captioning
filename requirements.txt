@@ -1,0 +1,9 @@
+gradio
+transformers
+torch
+Pillow
+deep-translator
+openpyxl
+pandas
+evaluate
+sacrebleu

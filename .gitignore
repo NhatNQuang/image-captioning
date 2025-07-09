@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python/
+env/
+venv/
+.env
+*.ipynb
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Môi trường ảo Python
+.venv/
+venv/
+env/
+
+# Thư mục chứa mô hình đã tải từ Hugging Face
+# Các mô hình này thường lớn và không nên đưa vào repo Git
+# Chúng ta sẽ tải chúng khi chạy app.
+model_cache/
+transformers_cache/
+~/.cache/huggingface/
+
+# Các file dữ liệu lớn
+*.pt  # PyTorch checkpoint files
+*.bin # Binary files for models
+*.safetensors # Safetensors files for models
+
+# Log files
+*.log
+
+# Thư mục chứa kết quả hoặc output tạm thời
+output/
+results/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
