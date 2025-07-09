@@ -4,7 +4,7 @@ import gradio as gr
 from PIL import Image
 import os
 import torch
-import gc # Để quản lý bộ nhớ
+import gc
 
 from model.caption_generator import CaptionGenerator
 from model.translator import Translator
@@ -15,8 +15,8 @@ from utils.evaluator import evaluate_captions
 translator = Translator()
 
 # Danh sách các mô hình có thể lựa chọn từ Hugging Face
+# CHỈ CẦN 3 MODEL NÀY THEO YÊU CẦU MỚI NHẤT
 AVAILABLE_MODELS = [
-    "blip2-flan-t5-xxl",
     "blip2-opt-2.7b",
     "git-base",
     "ofa-base",

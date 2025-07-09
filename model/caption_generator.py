@@ -3,7 +3,7 @@
 from transformers import (
     Blip2Processor, Blip2ForConditionalGeneration,
     AutoProcessor, AutoModelForCausalLM, # For GIT
-    AutoModelForSeq2SeqLM # For OFA
+    AutoModelForSeq2SeqLM # For OFA. OFA models are typically sequence-to-sequence.
 )
 from PIL import Image
 import torch
@@ -36,10 +36,11 @@ class CaptionGenerator:
         """Loads the specified model and its corresponding processor."""
         print(f"Loading model: {self.model_name} to device: {self.device}...")
 
+        # Logic tải BLIP-2 (không đổi)
         if "blip2" in self.model_name:
             if self.model_name == "blip2-flan-t5-xxl":
                 hf_model_id = "Salesforce/blip2-flan-t5-xxl"
-            elif self.model_name == "blip2-opt-2.7b":
+            elif self.model_name == "blip2-opt-2.7b": # Thêm tùy chọn BLIP-2 nhỏ hơn
                 hf_model_id = "Salesforce/blip2-opt-2.7b"
             else:
                 raise ValueError(f"Unsupported BLIP-2 model variant: {self.model_name}")
@@ -48,9 +49,10 @@ class CaptionGenerator:
             self.model = Blip2ForConditionalGeneration.from_pretrained(
                 hf_model_id,
                 torch_dtype=torch.float16 if self.device == 'cuda' else torch.float32,
-                # load_in_8bit=True if self.device == 'cuda' else False # Chỉ sử dụng nếu có bitsandbytes và GPU
+                # load_in_8bit=True if self.device == 'cuda' else False # Chỉ sử dụng nếu cài bitsandbytes
             ).to(self.device)
 
+        # Logic tải GIT
         elif "git" in self.model_name:
             if self.model_name == "git-base":
                 hf_model_id = "microsoft/git-base"
@@ -62,6 +64,7 @@ class CaptionGenerator:
             self.processor = AutoProcessor.from_pretrained(hf_model_id)
             self.model = AutoModelForCausalLM.from_pretrained(hf_model_id).to(self.device)
 
+        # Logic tải OFA
         elif "ofa" in self.model_name:
             if self.model_name == "ofa-base":
                 hf_model_id = "OFA-Sys/ofa-base"
@@ -69,7 +72,7 @@ class CaptionGenerator:
                 hf_model_id = "OFA-Sys/ofa-large"
             else:
                 raise ValueError(f"Unsupported OFA model variant: {self.model_name}")
-            
+
             self.processor = AutoProcessor.from_pretrained(hf_model_id)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(hf_model_id).to(self.device)
 
@@ -77,7 +80,7 @@ class CaptionGenerator:
             raise ValueError(f"Unsupported model: {self.model_name}. Please choose from blip2-*, git-*, ofa-*")
 
         print(f"Model {self.model_name} loaded successfully.")
-        
+
         if self.device == 'cuda':
             torch.cuda.empty_cache()
             gc.collect()
@@ -90,13 +93,14 @@ class CaptionGenerator:
         if self.processor is None or self.model is None:
             raise RuntimeError("Model and processor not loaded. Call _load_model() first.")
 
-        inputs = self.processor(images=image, return_tensors="pt").to(self.device)
-        
+        # Common generation parameters (can be tuned for each model if needed)
         max_new_tokens = 50
         num_beams = 5
         early_stopping = True
 
+        # Xử lý input và generate caption tùy theo mô hình
         if "blip2" in self.model_name:
+            inputs = self.processor(images=image, return_tensors="pt").to(self.device)
             generated_ids = self.model.generate(
                 **inputs,
                 max_new_tokens=max_new_tokens,
@@ -104,25 +108,30 @@ class CaptionGenerator:
                 early_stopping=early_stopping
             )
         elif "git" in self.model_name:
+            inputs = self.processor(images=image, return_tensors="pt").to(self.device)
             generated_ids = self.model.generate(
-                pixel_values=inputs.pixel_values,
+                pixel_values=inputs.pixel_values, # GIT often takes pixel_values directly
                 max_new_tokens=max_new_tokens,
                 num_beams=num_beams,
                 early_stopping=early_stopping
             )
         elif "ofa" in self.model_name:
-            ofa_task_prefix = "What does the image describe?" # OFA often benefits from a task prefix
-            input_ids = self.processor(text=ofa_task_prefix, return_tensors="pt").input_ids.to(self.device)
-            
+            # OFA models often require a specific task prefix in the input
+            ofa_task_prefix = "What does the image describe?"
+            # Process image and text separately for OFA
+            inputs = self.processor(images=image, text=ofa_task_prefix, return_tensors="pt")
+
             generated_ids = self.model.generate(
-                input_ids=input_ids,
-                patch_images=inputs.pixel_values, # OFA uses patch_images
-                no_repeat_ngram_size=3,
+                input_ids=inputs.input_ids.to(self.device),
+                attention_mask=inputs.attention_mask.to(self.device),
+                patch_images=inputs.pixel_values.to(self.device), # OFA uses patch_images
+                no_repeat_ngram_size=3, # Thường dùng cho OFA để tránh lặp
                 num_beams=num_beams,
                 max_length=max_new_tokens,
                 early_stopping=early_stopping
             )
-        else: # Fallback
+        else: # Fallback (should not be reached if all supported models are covered)
+             inputs = self.processor(images=image, return_tensors="pt").to(self.device)
              generated_ids = self.model.generate(
                 **inputs,
                 max_new_tokens=max_new_tokens,
