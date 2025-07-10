@@ -7,3 +7,4 @@ openpyxl
 pandas
 evaluate
 sacrebleu
+Translator
