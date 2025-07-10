@@ -8,9 +8,9 @@ This project integrates and leverages the power of advanced Vision-Language Mode
 
 ### 1.1. Dataset
 
-[cite_start]The project utilizes a subset of the **Flickr Image Dataset** (originally known as Flickr30k dataset) from Kaggle[cite: 1]. [cite_start]Flickr30k is a standard benchmark dataset for sentence-based image description, containing 158,000 image captions[cite: 2]. [cite_start]Specifically, Flickr30k Entities, an extension of Flickr30k, augments these captions with coreference chains linking mentions of the same entities across different captions for the same image, and associates them with manually annotated bounding boxes[cite: 2].
+[[cite_start]](https://www.kaggle.com/datasets/hsankesara/flickr-image-dataset)The project utilizes a subset of the **Flickr Image Dataset** (originally known as Flickr30k dataset) from Kaggle. Flickr30k is a standard benchmark dataset for sentence-based image description, containing 158,000 image captions. Specifically, Flickr30k Entities, an extension of Flickr30k, augments these captions with coreference chains linking mentions of the same entities across different captions for the same image, and associates them with manually annotated bounding boxes.
 
-In this project, to optimize resources, we used only the **first 50 images** from the Flickr30k dataset, along with their corresponding comments. [cite_start]Each of these 50 images has **more than one comment**[cite: 1]. For evaluation purposes, BLEU Score calculation is performed only on the **first 10 images** of this 50-image set to conserve time and computational resources.
+In this project, to optimize resources, we used only the **first 50 images** from the Flickr30k dataset, along with their corresponding comments. Each of these 50 images has **more than one comment**. For evaluation purposes, BLEU Score calculation is performed only on the **first 10 images** of this 50-image set to conserve time and computational resources.
 
 ### 1.2. Model Survey and Selection Process
 
@@ -19,15 +19,18 @@ Initially, the project surveyed other powerful and popular Vision-Language model
 However, during practical implementation on the current development environment (personal laptop configuration), loading and running larger versions of these models (e.g., BLIP-2 Flan-T5-XXL, GIT-Large, OFA-Large) presented significant resource challenges, specifically **limitations in RAM and GPU VRAM**. This led to errors like "The paging file is too small" or extremely slow processing times (e.g., OFA taking over 15 minutes for evaluation with Beam Search). Therefore, to ensure feasibility, efficiency, and responsiveness in a local demo application, the project opted for the following three models, which offer a good balance between description quality and resource requirements:
 
 * **`blip-image-captioning-base` (Salesforce BLIP)**:
-    * [cite_start]**Reason for Selection**: This is the base version of BLIP, a flexible VLP framework that excels in both vision-language understanding and generation tasks[cite: 3]. [cite_start]It effectively utilizes noisy web data by bootstrapping captions[cite: 3]. [cite_start]This model achieves state-of-the-art results on various VL tasks, including image-text retrieval (+2.7% in average recall@1), image captioning (+2.8% in CIDEr), and VQA (+1.6% in VQA score)[cite: 3]. Compared to larger BLIP-2 versions, BLIP-base requires significantly fewer resources while still producing accurate and fluent descriptions.
+    * [[cite_start]](https://huggingface.co/Salesforce/blip-image-captioning-base)
+    * **Reason for Selection**: This is the base version of BLIP, a flexible VLP framework that excels in both vision-language understanding and generation tasks. It effectively utilizes noisy web data by bootstrapping captions. This model achieves state-of-the-art results on various VL tasks, including image-text retrieval (+2.7% in average recall@1), image captioning (+2.8% in CIDEr), and VQA (+1.6% in VQA score). Compared to larger BLIP-2 versions, BLIP-base requires significantly fewer resources while still producing accurate and fluent descriptions.
     * **Mechanism**: BLIP operates as an encoder-decoder model utilizing Transformers to process both visual and textual information. It learns to align visual features with linguistic structures to generate descriptions.
 
 * **`noamrot/FuseCap` (FuseCap)**:
-    * [cite_start]**Reason for Selection**: FuseCap is a novel method designed to enrich existing image captions by fusing detailed information from "vision experts" (e.g., object detectors, attribute recognizers, and Optical Character Recognition (OCR)) with original captions using a Large Language Model (LLM)[cite: 4, 5]. [cite_start]The model is trained on this enriched caption dataset, allowing it to generate more comprehensive and detailed descriptions than traditional methods[cite: 4]. [cite_start]Despite having fewer parameters and utilizing less training data than other state-of-the-art models, FuseCap demonstrates superior performance in generating comprehensive captions[cite: 4]. This highlights the potential of a data-centric approach over solely architectural improvements.
-    * **Mechanism**: FuseCap functions as a "methodology" for generating richer training data, which is then used to train a captioning model based on the BLIP architecture. [cite_start]The process involves: 1) Extracting visual information from images using vision experts (Faster-RCNN for object detection [cite: 6][cite_start], attribute recognition, and OCR models like CRAFT [cite: 7] [cite_start]and Parseq [cite: 8]). [cite_start]2) Fusing this extracted information with the original captions using a fine-tuned LLM (e.g., Flan-T5 XL [cite: 9]). 3) Training a BLIP-based captioning model with this enriched image-caption dataset.
+    * [[cite_start]](https://huggingface.co/noamrot/FuseCap_Image_Captioning)
+    * **Reason for Selection**: FuseCap is a novel method designed to enrich existing image captions by fusing detailed information from "vision experts" (e.g., object detectors, attribute recognizers, and Optical Character Recognition (OCR)) with original captions using a Large Language Model (LLM). The model is trained on this enriched caption dataset, allowing it to generate more comprehensive and detailed descriptions than traditional methods. Despite having fewer parameters and utilizing less training data than other state-of-the-art models, FuseCap demonstrates superior performance in generating comprehensive captions. This highlights the potential of a data-centric approach over solely architectural improvements.
+    * **Mechanism**: FuseCap functions as a "methodology" for generating richer training data, which is then used to train a captioning model based on the BLIP architecture.The process involves: 1) Extracting visual information from images using vision experts (Faster-RCNN for object detection, attribute recognition, and OCR models like CRAFT and Parseq. 2) Fusing this extracted information with the original captions using a fine-tuned LLM. 3) Training a BLIP-based captioning model with this enriched image-caption dataset.
 
 * **`nlpconnect/vit-gpt2-image-captioning` (ViT-GPT2)**:
-    * [cite_start]**Reason for Selection**: This represents a classic encoder-decoder architecture for image captioning[cite: 10]. [cite_start]It utilizes a Vision Transformer (ViT) for image encoding and GPT-2 for text decoding[cite: 10]. This model provides a solid and relatively lightweight baseline, suitable for demo purposes and performance comparison within a resource-constrained environment.
+    * [[cite_start]](https://huggingface.co/nlpconnect/vit-gpt2-image-captioning)
+    * **Reason for Selection**: This represents a classic encoder-decoder architecture for image captioning[cite: 10]. [cite_start]It utilizes a Vision Transformer (ViT) for image encoding and GPT-2 for text decoding. This model provides a solid and relatively lightweight baseline, suitable for demo purposes and performance comparison within a resource-constrained environment.
     * **Mechanism**: Images are fed into the Vision Transformer (encoder) to extract visual features. These features are then passed to GPT-2 (decoder), an autoregressive language model, which generates the text sequence (caption).
 
 ### 1.3. Multilingual Support
@@ -41,7 +44,7 @@ Testing on the first 10 images from the `test_images` dataset provided quantitat
 **Captioning Example (Image: `10010052.jpg`)**
 <br>
 <p align="center">
-  <img src="https://github.com/NhatNQuang/image-captioning/blob/main/test_images/10010052.jpg" alt="Sample Image 10010052.jpg" style="width:50%;"/>
+  <img src="https://github.com/NhatNQuang/image-captioning/blob/main/test_images/10010052.jpg" alt="Sample Image 10010052.jpg" style="width:20%;"/>
 </p>
 <br>
 
@@ -170,3 +173,10 @@ If deploying this application in a real-world production environment, several as
 
 **Fine-tuning Models:**
 - While not strictly required in the initial project scope, fine-tuning the selected models (e.g., BLIP-base) on a more specific and specialized image-caption dataset (if available) can significantly improve the accuracy and relevance of captions for that particular domain. Techniques like LoRA (Low-Rank Adaptation) are highly beneficial for this, as they allow fine-tuning large models with fewer resources and reduced risk of overfitting.
+
+## 5. Example Using 
+<br>
+<p align="center">
+  <img src="https://github.com/NhatNQuang/image-captioning/blob/develop/Image_Captioning_Sample_test.png" alt="Sample using for Image 10010052.jpg" style="width:20%;"/>
+</p>
+<br>
