@@ -177,6 +177,6 @@ If deploying this application in a real-world production environment, several as
 ## 5. Example Using 
 <br>
 <p align="center">
-  <img src="https://github.com/NhatNQuang/image-captioning/blob/develop/Image_Captioning_Sample_test.png" alt="Sample using for Image 10010052.jpg" style="width:20%;"/>
+  <img src="https://github.com/NhatNQuang/image-captioning/blob/develop/Image_Captioning_Sample_test.png" alt="Sample using for Image 10010052.jpg" style="width:70%;"/>
 </p>
 <br>
